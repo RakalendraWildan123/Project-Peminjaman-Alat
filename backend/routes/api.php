@@ -1,61 +1,70 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\API\AuthController;
-use App\Http\Controllers\API\KategoriController;
-use App\Http\Controllers\API\AlatController;
-use App\Http\Controllers\API\UserController;
-use App\Http\Controllers\API\PeminjamanController;
-use App\Http\Controllers\API\PengembalianController;
-use App\Http\Controllers\API\LogAktivitasController;
-use App\Http\Controllers\API\LaporanController;
+use App\Http\Controllers\AdminController;
+use App\Http\Controllers\PetugasController;
+use App\Http\Controllers\PeminjamController;
+use App\Http\Controllers\AuthController;
 
-// Public Routes (tidak perlu token)
-Route::post('/register', [AuthController::class, 'register']);
-Route::post('/login', [AuthController::class, 'login']);
+Route::get('/', function () {
+    return view('welcome');
+});
 
-// Protected Routes (Wajib membawa Bearer Token dari Sanctum)
-Route::middleware('auth:sanctum')->group(function () {
+// Route Tamu (Belum Login)
+Route::middleware('guest')->group(function () {
+    Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
+    Route::post('/login', [AuthController::class, 'login']);
+});
 
-    Route::get('/me', [AuthController::class, 'me']);
-    Route::post('/logout', [AuthController::class, 'logout']);
+// Route Logout (Harus sudah login)
+Route::post('/logout', [AuthController::class, 'logout'])->name('logout')->middleware('auth');
 
-    // Katalog bisa diakses semua user yang login (admin, petugas, peminjam)
-    Route::get('/katalog', [AlatController::class, 'katalog']);
+// Route khusus Admin
+Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
+    Route::get('/dashboard', [AdminController::class, 'index'])->name('dashboard');
 
-    // Route khusus Admin
-    Route::middleware('role.admin')->group(function () {
-        Route::apiResource('kategori', KategoriController::class);
-        Route::apiResource('alat', AlatController::class);
-        Route::apiResource('user', UserController::class);
-        Route::get('/log-aktivitas', [LogAktivitasController::class, 'index']);
-        Route::get('/laporan-peminjaman', [LaporanController::class, 'index']);
+    // CRUD Alat (Lengkap)
+    Route::get('/alat', [AdminController::class, 'indexAlat'])->name('alat.index');
+    Route::get('/alat/create', [AdminController::class, 'createAlat'])->name('alat.create');
+    Route::post('/alat', [AdminController::class, 'storeAlat'])->name('alat.store');
+    Route::get('/alat/{id}/edit', [AdminController::class, 'editAlat'])->name('alat.edit');
+    Route::put('/alat/{id}', [AdminController::class, 'updateAlat'])->name('alat.update');
+    Route::delete('/alat/{id}', [AdminController::class, 'destroyAlat'])->name('alat.destroy');
 
-        // Route Peminjaman Admin
-        Route::get('/peminjaman', [PeminjamanController::class, 'index']);
-        Route::get('/peminjaman/{peminjaman}', [PeminjamanController::class, 'show']);
-        Route::post('/peminjaman/{peminjaman}/approve', [PeminjamanController::class, 'approve']);
-        Route::put('/peminjaman/{peminjaman}', [PeminjamanController::class, 'update']);
-        Route::delete('/peminjaman/{peminjaman}', [PeminjamanController::class, 'destroy']);
+    // CRUD User
+    Route::get('/users', [AdminController::class, 'indexUser'])->name('user.index');
+    Route::get('/users/create', [AdminController::class, 'createUser'])->name('user.create');
+    Route::post('/users', [AdminController::class, 'storeUser'])->name('user.store');
+    Route::get('/users/{id}/edit', [AdminController::class, 'editUser'])->name('user.edit');
+    Route::put('/users/{id}', [AdminController::class, 'updateUser'])->name('user.update');
+    Route::delete('/users/{id}', [AdminController::class, 'destroyUser'])->name('user.destroy');
 
-        // Route Pengembalian Admin
-        Route::get('/pengembalian', [PengembalianController::class, 'index']);
-        Route::get('/pengembalian/{pengembalian}', [PengembalianController::class, 'show']);
-        Route::put('/pengembalian/{pengembalian}', [PengembalianController::class, 'update']);
-        Route::delete('/pengembalian/{pengembalian}', [PengembalianController::class, 'destroy']);
-    });
+    // CRUD Kategori
+    Route::get('/kategori', [AdminController::class, 'indexKategori'])->name('kategori.index');
+    Route::get('/kategori/create', [AdminController::class, 'createKategori'])->name('kategori.create');
+    Route::post('/kategori', [AdminController::class, 'storeKategori'])->name('kategori.store');
+    Route::get('/kategori/{id}/edit', [AdminController::class, 'editKategori'])->name('kategori.edit');
+    Route::put('/kategori/{id}', [AdminController::class, 'updateKategori'])->name('kategori.update');
+    Route::delete('/kategori/{id}', [AdminController::class, 'destroyKategori'])->name('kategori.destroy');
 
-    // Route khusus Petugas
-    Route::middleware('role.petugas')->group(function () {
-        Route::post('/peminjaman/{peminjaman}/approve', [PeminjamanController::class, 'approve']);
-        Route::post('/pengembalian', [PengembalianController::class, 'store']);
-        Route::get('/laporan-peminjaman', [LaporanController::class, 'index']);
-    });
+    // CRUD Peminjaman
+    Route::get('/peminjaman', [AdminController::class, 'indexPeminjaman'])->name('peminjaman.index');
+    Route::get('/peminjaman/create', [AdminController::class, 'createPeminjaman'])->name('peminjaman.create');
+    Route::post('/peminjaman', [AdminController::class, 'storePeminjaman'])->name('peminjaman.store');
+    Route::put('/peminjaman/{id}/status', [AdminController::class, 'updateStatusPeminjaman'])->name('peminjaman.updateStatus');
+    Route::delete('/peminjaman/{id}', [AdminController::class, 'destroyPeminjaman'])->name('peminjaman.destroy');
+});
 
-    // Route khusus Peminjam
-    Route::middleware('role.peminjam')->group(function () {
-        Route::post('/peminjaman', [PeminjamanController::class, 'store']);
-        Route::get('/riwayat-pinjam', [PeminjamanController::class, 'riwayat']);
-    });
+// Route khusus Petugas
+Route::middleware(['auth', 'role:petugas,admin'])->prefix('petugas')->name('petugas.')->group(function () {
+    Route::get('/peminjaman', [PetugasController::class, 'indexPeminjaman'])->name('peminjaman.index');
+    Route::post('/peminjaman/{id}/setujui', [PetugasController::class, 'setujuiPeminjaman'])->name('peminjaman.setujui');
+    Route::post('/pengembalian/{id}', [PetugasController::class, 'prosesPengembalian'])->name('pengembalian.proses');
+});
 
+// Route khusus Peminjam
+Route::middleware(['auth', 'role:peminjam'])->prefix('peminjam')->name('peminjam.')->group(function () {
+    Route::get('/katalog', [PeminjamController::class, 'katalogAlat'])->name('katalog');
+    Route::post('/peminjaman/ajukan', [PeminjamController::class, 'ajukanPeminjaman'])->name('peminjaman.ajukan');
+    Route::get('/riwayat', [PeminjamController::class, 'riwayatPeminjaman'])->name('riwayat');
 });
