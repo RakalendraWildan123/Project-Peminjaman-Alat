@@ -7,32 +7,28 @@ use Illuminate\Http\Resources\Json\JsonResource;
 
 class PeminjamanResource extends JsonResource
 {
-
     public function toArray(Request $request): array
     {
         return [
             'id' => $this->id,
-            'peminjam' => $this->whenLoaded('user', fn() => $this->user?->name),
-            'tgl_pinjam' => $this->tgl_pinjam?->format('Y-m-d'),
-            'tgl_kembali_plan' => $this->tgl_kembali_plan?->format('Y-m-d'),
+            'peminjam' => $this->user?->name,
+            'tgl_pinjam' => $this->tgl_pinjam ? date('Y-m-d', strtotime($this->tgl_pinjam)) : null,
+            'tgl_kembali_plan' => $this->tgl_kembali_plan ? date('Y-m-d', strtotime($this->tgl_kembali_plan)) : null,
             'status' => $this->status,
-            'item_dipinjam' => $this->whenLoaded('detailPinjam', function() {
-                return $this->detailPinjam->map(function ($detail) {
-                    return [
-                        'nama_alat' => $detail->alat?->nama_alat ?? 'Alat Dihapus/Tidak Ditemukan',
-                        'jumlah' => (int) $detail->jumlah,
-                    ];
-                });
-            }),
-            'info_pengembalian' => $this->whenLoaded('pengembalian', function () {
-                if (!this->pengembalian) return null;
+            'item_dipinjam' => $this->detailPinjam?->map(function ($detail) {
                 return [
-                    'tgl_kembali' => $this->pengembalian->tgl_kembali?->('Y-m-d'),
-                    'kondisi' => $this->pengembalian->kondisi_kembali,
-                    'denda' => (int) $this->pengembalian->denda,
-                    'petugas_penerima' => $this->pengembalian->petugas?->name ?? 'sistem',
+                    'nama_alat' => $detail->alat?->nama_alat ?? 'Alat Dihapus/Tidak Ditemukan',
+                    'jumlah' => (int) $detail->jumlah,
                 ];
-            }),
+            })->values(),
+            'info_pengembalian' => $this->pengembalian ? [
+                'tgl_kembali' => $this->pengembalian->tgl_kembali
+                    ? date('Y-m-d', strtotime($this->pengembalian->tgl_kembali))
+                    : null,
+                'kondisi' => $this->pengembalian->kondisi_kembali,
+                'denda' => (int) $this->pengembalian->denda,
+                'petugas_penerima' => $this->pengembalian->petugas?->name ?? 'sistem',
+            ] : null,
         ];
     }
 }

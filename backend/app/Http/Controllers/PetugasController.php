@@ -6,17 +6,30 @@ use App\Models\Peminjaman;
 use App\Models\Pengembalian;
 use App\Models\Alat;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class PetugasController extends Controller
 {
-    //Menampilkan daftar pengajuan peminjaman dari siswa/peminjam
-    public function indexPeminjaman()
+    // Menampilkan daftar pengajuan peminjaman dari siswa/peminjam
+    public function indexPeminjaman(Request $request)
     {
-        $peminjamans = Peminjaman::with('detailpinjam')->findOrFail($id);
-        return view('petugas.peminjaman.index', compact('peminjamans'));
+        $search = $request->input('search');
+
+        $peminjamans = Peminjaman::with(['user', 'detailPinjams.alat'])
+            ->where('status', 'diajukan')
+            ->when($search, function ($query, $search) {
+                return $query->whereHas('user', function ($q) use ($search) {
+                    $q->where('name', 'like', "%{$search}%");
+                });
+            })
+            ->latest()
+            ->get();
+
+        return view('petugas.peminjaman.index', compact('peminjamans', 'search'));
     }
 
-    public function setujuPeminjaman($id)
+    // Menyetujui Peminjaman (Mengubah status & mengurangi stok alat)
+    public function setujuiPeminjaman($id)
     {
         DB::beginTransaction();
         try {
@@ -34,35 +47,54 @@ class PetugasController extends Controller
             return redirect()->back()->with('success', 'Peminjaman disetujui dan stok alat dikurangi.');
         } catch (\Exception $e) {
             DB::rollback();
-            return redirect()->back()->with('error', 'Terjadi Kesalahan: '. $e->getMessage());
+            return redirect()->back()->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
         }
     }
 
-    public function prosesPengembalain(Request $request, $eminjamanid)
+    // Menolak Peminjaman (Menghapus pengajuan agar siswa bisa mengajukan ulang)
+    public function tolakPeminjaman($id)
+    {
+        try {
+            $peminjaman = Peminjaman::findOrFail($id);
+
+            // Pastikan statusnya memang masih diajukan
+            if ($peminjaman->status == 'diajukan') {
+                $peminjaman->delete();
+                return redirect()->back()->with('success', 'Pengajuan peminjaman berhasil ditolak.');
+            }
+
+            return redirect()->back()->with('error', 'Status peminjaman sudah berubah.');
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
+        }
+    }
+
+    // Memproses Pengembalian Alat
+    public function prosesPengembalian(Request $request, $peminjamanId)
     {
         $request->validate([
             'kondisi_kembali' => 'required|string',
             'denda' => 'nullable|integer',
         ]);
 
-        Db::beginTransaction();
+        DB::beginTransaction();
         try {
-            $peminjaman = Peminjaman::with('detailPinjam')->findOrFail($peminjamanId);
+            $peminjaman = Peminjaman::with('detailPinjams')->findOrFail($peminjamanId);
 
             // Simpan data pengembalian
             Pengembalian::create([
                 'peminjaman_id' => $peminjaman->id,
-                'tgl_kembali' => mow(),
+                'tgl_kembali' => now(),
                 'kondisi_kembali' => $request->kondisi_kembali,
                 'denda' => $request->denda ?? 0,
                 'petugas_id' => auth()->id(),
             ]);
 
-            // UPdate Status peminjaman jadi selesai
+            // Update status peminjaman jadi selesai
             $peminjaman->update(['status' => 'selesai']);
 
-            //Kembalikan stok alat ke inventaris
-            foreach ($peminjaman->detailPinjam as $detail) {
+            // Kembalikan stok alat ke inventaris
+            foreach ($peminjaman->detailPinjams as $detail) {
                 $alat = Alat::findOrFail($detail->alat_id);
                 $alat->stok += $detail->jumlah;
                 $alat->save();
@@ -70,10 +102,10 @@ class PetugasController extends Controller
 
             DB::commit();
             return redirect()->back()->with('success', 'Pengembalian berhasil dicatat dan stok dipulihkan.');
-        
+
         } catch (\Exception $e) {
             DB::rollback();
-            return redirect()->back()->with('error', 'Terjadi kesalahan: '. $e->getMessage());
+            return redirect()->back()->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
         }
     }
 }
