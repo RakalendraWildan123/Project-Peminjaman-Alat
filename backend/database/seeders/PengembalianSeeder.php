@@ -37,4 +37,4 @@ class PengembalianSeeder extends Seeder
             Pengembalian::create($kembali);
         }
     }
-}``
+}
