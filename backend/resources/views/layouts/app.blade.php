@@ -286,16 +286,6 @@
                         <span class="uppercase tracking-wider text-[10px] font-bold">{{ $role }}</span>
                     </span>
 
-                    <!-- Tombol Unduh PDF Proyek -->
-                    <a href="{{ route('dokumentasi.download') }}" title="Unduh Penjelasan Proyek (PDF)"
-                       class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-blue-50 hover:bg-blue-600 text-blue-700 hover:text-white border border-blue-200 hover:border-blue-600 transition shadow-xs">
-                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                        </svg>
-                        <span class="hidden sm:inline">Unduh</span>
-                        <span>PDF</span>
-                    </a>
-
                     <!-- User Pill Badge (Menuju Profil Saya & Manajemen Sesi) -->
                     <a href="{{ route('profil.edit') }}" title="Profil Saya & Pengaturan Sesi" class="flex items-center gap-2 p-1.5 pr-3 bg-slate-100 hover:bg-slate-200/80 rounded-full transition text-xs font-medium text-slate-700 border border-slate-200/70 hover:border-slate-300">
                         @if(auth()->user()->foto)

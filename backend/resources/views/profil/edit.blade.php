@@ -143,43 +143,6 @@
                 </p>
             </div>
 
-            <!-- CARD DOKUMENTASI PROYEK & UNDUH PDF -->
-            <div class="bg-gradient-to-b from-blue-50/60 to-white rounded-2xl border border-blue-200/80 shadow-xs p-6">
-                <div class="flex items-center gap-3 mb-3">
-                    <div class="w-10 h-10 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center text-lg font-bold shrink-0">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                        </svg>
-                    </div>
-                    <div>
-                        <h3 class="text-sm font-bold text-slate-800">Dokumentasi Proyek (PDF)</h3>
-                        <p class="text-[11px] text-slate-500">Panduan lengkap sistem, fitur & skema</p>
-                    </div>
-                </div>
-
-                <p class="text-xs text-slate-600 mb-4 leading-relaxed">
-                    Unduh berkas PDF resmi penjelasan proyek untuk presentasi, laporan, atau pengujian sistem inventaris.
-                </p>
-
-                <div class="space-y-2">
-                    <a href="{{ route('dokumentasi.download') }}"
-                       class="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold py-2.5 px-4 rounded-xl shadow-md shadow-blue-500/20 transition-all hover:scale-[1.01] active:scale-[0.99] text-xs sm:text-sm">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
-                        </svg>
-                        <span>Unduh PDF Langsung</span>
-                    </a>
-
-                    <a href="{{ asset('Penjelasan_Proyek_Peminjaman_Alat.pdf') }}" target="_blank"
-                       class="w-full flex items-center justify-center gap-2 bg-white hover:bg-slate-50 text-slate-700 font-semibold py-2 px-4 rounded-xl border border-slate-200 transition text-xs">
-                        <svg class="w-3.5 h-3.5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
-                        </svg>
-                        <span>Buka di Google Chrome (Preview)</span>
-                    </a>
-                </div>
-            </div>
-
         </div>
 
         <!-- KOLOM KANAN: FORMULIR EDIT PROFIL & KATA SANDI -->
