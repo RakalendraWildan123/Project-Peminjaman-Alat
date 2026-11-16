@@ -33,7 +33,10 @@ class LogAktivitasSeeder extends Seeder
         ];
 
         foreach ($logs as $log) {
-            LogAktivitas::create($log);
+            LogAktivitas::firstOrCreate([
+                'user_id' => $log['user_id'],
+                'aktivitas' => $log['aktivitas'],
+            ], $log);
         }
     }
 }

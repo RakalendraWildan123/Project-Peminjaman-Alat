@@ -8,47 +8,31 @@ use Illuminate\Support\Facades\Auth;
 
 class AlatObserver
 {
-    private function catatlog(string $pesan): void
+    private function catatLog(string $pesan): void
     {
-        if (Auth::check()) {
-            LogAktivitas::create([
-                'user_id' => Auth::id(),
-                'aktivitas' => $pesan,
-            ]);
-        }
-
+        $userId = Auth::id() ?? 1;
+        LogAktivitas::create([
+            'user_id' => $userId,
+            'aktivitas' => $pesan,
+        ]);
     }
 
     public function created(Alat $alat): void
     {
-        $this->catatLog("Menambahkan master data alat baru: {$alat->nama_alat}(ID: {$alat->id})");
+        $this->catatLog("Menambahkan alat baru: '{$alat->nama_alat}' (Stok: {$alat->stok})");
     }
 
     public function updated(Alat $alat): void
     {
-        $perubahanArray = array_diff(array_keys($alat->getChanges()), ['updated_at']);
-        if (!empty($perubahanArray)) {
-            $perubahan = implode(',', $perubahanArray);
-                $this->catatlog("Memperbarui data alat '{$alat->nama_alat}' (kolom yang diubah: {$perubahan})");
+        $perubahan = array_diff(array_keys($alat->getChanges()), ['updated_at']);
+        if (!empty($perubahan)) {
+            $kolom = implode(', ', $perubahan);
+            $this->catatLog("Memperbarui data alat '{$alat->nama_alat}' (kolom diubah: {$kolom})");
         }
     }
 
     public function deleted(Alat $alat): void
     {
-        $this->catatLog("Menghapus master data alat: {$alat->nama_alat} (ID: {$alat->id})");
-    }
-
-
-    public function restored(Alat $alat): void
-    {
-        //
-    }
-
-    /**
-     * Handle the Alat "force deleted" event.
-     */
-    public function forceDeleted(Alat $alat): void
-    {
-        //
+        $this->catatLog("Menghapus data alat: '{$alat->nama_alat}' (ID: #{$alat->id})");
     }
 }

@@ -56,7 +56,7 @@ class AlatSeeder extends Seeder
         ];
 
         foreach ($alat as $item) {
-            Alat:: Create($item);
+            Alat::firstOrCreate(['nama_alat' => $item['nama_alat']], $item);
         }
     }
 }

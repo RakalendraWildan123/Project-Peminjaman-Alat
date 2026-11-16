@@ -45,4 +45,9 @@ class User extends Authenticatable
     {
         return $this->hasMany(LogAktivitas::class);
     }
+
+    public function getFotoAttribute(): ?string
+    {
+        return $this->foto_profile;
+    }
 }

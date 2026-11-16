@@ -2,7 +2,7 @@ services:
   # 1. SERVER DTABASE
   mysql-server:
     image: mysql:8.0
-    container_name: MySQL-API
+    container_name: MySQL-UJICOBA
     environment:
       MYSQL_DATABASE: API_ujikom
       MYSQL_USER: api_ujikom
@@ -14,19 +14,20 @@ services:
       - API-UJIKOM
     volumes:
       - db_data:/var/lib/mysql
+      - ./database_backup.sql:/docker-entrypoint-initdb.d/init.sql:ro
 
   # 2. SERVER BACKEND (LARAVEL)
   app-laravel:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    container_name: laravel-api
+    container_name: laravel-UJICOBA
     working_dir: /var/www
     ports:
-      - "8001:8000"
+      - "8000:8000"
     volumes:
       - ./backend:/var/www
-    command: php artisan serve --host=0.0.0.0 --port=8000
+    command: sh -c "if [ ! -f .env ]; then cp .env.example .env; fi && if [ ! -f vendor/autoload.php ]; then composer install --no-interaction; fi && php artisan storage:link --force && php artisan serve --host=0.0.0.0 --port=8000"
     depends_on:
       - mysql-server
     networks:
@@ -34,7 +35,7 @@ services:
   # 3. SERVER IU DATABASE (PHPMYADMIN)
   phpMyadmin:
     image: phpmyadmin
-    container_name: PhpMyadmin-API
+    container_name: PhpMyadmin-UJICOBA
     environment:
       PMA_HOST: mysql-server
     ports:

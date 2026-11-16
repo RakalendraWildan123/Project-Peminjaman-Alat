@@ -5,47 +5,42 @@ use App\Http\Controllers\AdminController;
 use App\Http\Controllers\PetugasController;
 use App\Http\Controllers\PeminjamController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\ProfilController;
 
 Route::get('/', function () {
-    return view('welcome');
+    if (! auth()->check()) {
+        return redirect()->route('login');
+    }
+
+    return match (auth()->user()->role) {
+        'admin' => redirect()->route('admin.dashboard'),
+        'petugas' => redirect()->route('petugas.peminjaman.index'),
+        'peminjam' => redirect()->route('peminjam.dashboard'),
+        default => redirect()->route('login'),
+    };
 });
 
-// =========================
-// LOGIN & LOGOUT WEBSITE
-// =========================
-
-Route::middleware('guest')->group(function () {
-    Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
-    Route::post('/login', [AuthController::class, 'login']);
-});
-
-Route::post('/logout', [AuthController::class, 'logout'])
-    ->name('logout')
-    ->middleware('auth');
-
-
-// =========================
-// ROUTE KHUSUS ADMIN
-// =========================
-
+//admin
 Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/dashboard', [AdminController::class, 'index'])->name('dashboard');
 
     // CRUD Alat
     Route::get('/alat', [AdminController::class, 'indexAlat'])->name('alat.index');
     Route::get('/alat/create', [AdminController::class, 'createAlat'])->name('alat.create');
-    Route::post('/alat', [AdminController::class, 'storeAlat'])->name('alat.store');
     Route::get('/alat/{id}/edit', [AdminController::class, 'editAlat'])->name('alat.edit');
     Route::put('/alat/{id}', [AdminController::class, 'updateAlat'])->name('alat.update');
     Route::delete('/alat/{id}', [AdminController::class, 'destroyAlat'])->name('alat.destroy');
+    Route::post('/alat', [AdminController::class, 'storeAlat'])->name('alat.store');
 
     // CRUD User
-    Route::get('/users', [AdminController::class, 'indexUser'])->name('user.index');
-    Route::get('/users/create', [AdminController::class, 'createUser'])->name('user.create');
-    Route::post('/users', [AdminController::class, 'storeUser'])->name('user.store');
-    Route::get('/users/{id}/edit', [AdminController::class, 'editUser'])->name('user.edit');
-    Route::put('/users/{id}', [AdminController::class, 'updateUser'])->name('user.update');
-    Route::delete('/users/{id}', [AdminController::class, 'destroyUser'])->name('user.destroy');
+    Route::get('/user', [AdminController::class, 'indexUser'])->name('user.index');
+    Route::get('/user/create', [AdminController::class, 'createUser'])->name('user.create');
+    Route::post('/user', [AdminController::class, 'storeUser'])->name('user.store');
+    Route::get('/user/{id}/edit', [AdminController::class, 'editUser'])->name('user.edit');
+    Route::put('/user/{id}', [AdminController::class, 'updateUser'])->name('user.update');
+    Route::delete('/user/{id}', [AdminController::class, 'destroyUser'])->name('user.destroy');
+    // profile
+    Route::get('/users/{id}', [AdminController::class, 'showUser'])->name('user.show');
 
     // CRUD Kategori
     Route::get('/kategori', [AdminController::class, 'indexKategori'])->name('kategori.index');
@@ -55,34 +50,79 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::put('/kategori/{id}', [AdminController::class, 'updateKategori'])->name('kategori.update');
     Route::delete('/kategori/{id}', [AdminController::class, 'destroyKategori'])->name('kategori.destroy');
 
-    // CRUD Peminjaman (Admin)
+    // CRUD Peminjaman
     Route::get('/peminjaman', [AdminController::class, 'indexPeminjaman'])->name('peminjaman.index');
     Route::get('/peminjaman/create', [AdminController::class, 'createPeminjaman'])->name('peminjaman.create');
     Route::post('/peminjaman', [AdminController::class, 'storePeminjaman'])->name('peminjaman.store');
     Route::put('/peminjaman/{id}/status', [AdminController::class, 'updateStatusPeminjaman'])->name('peminjaman.updateStatus');
-    Route::delete('/peminjaman/{id}', [AdminController::class, 'destroyPeminjaman'])->name('peminjaman.destroy');
+
+    // CRUD Pengembalian
+    Route::get('/pengembalian', [AdminController::class, 'indexPengembalian'])->name('pengembalian.index');
+    Route::get('/pengembalian/menunggu', [AdminController::class, 'indexMenungguPengembalian'])->name('pengembalian.menunggu');
+    Route::get('/pengembalian/riwayat', [AdminController::class, 'indexRiwayatPengembalian'])->name('pengembalian.riwayat');
+    Route::post('/pengembalian/{peminjamanId}/proses', [AdminController::class, 'prosesPengembalian'])->name('pengembalian.proses');
+    Route::get('/pengembalian/{id}/edit', [AdminController::class, 'editPengembalian'])->name('pengembalian.edit');
+    Route::put('/pengembalian/{id}', [AdminController::class, 'updatePengembalian'])->name('pengembalian.update');
+    Route::delete('/pengembalian/{id}', [AdminController::class, 'destroyPengembalian'])->name('pengembalian.destroy');
 });
 
-
-// =========================
-// ROUTE KHUSUS PETUGAS
-// =========================
-
+//petugas
 Route::middleware(['auth', 'role:petugas,admin'])->prefix('petugas')->name('petugas.')->group(function () {
-    // Peminjaman & Persetujuan
+    Route::get('/dashboard', [PetugasController::class, 'dashboard'])->name('dashboard');
+
+    // Persetujuan Peminjaman
     Route::get('/peminjaman', [PetugasController::class, 'indexPeminjaman'])->name('peminjaman.index');
     Route::post('/peminjaman/{id}/setujui', [PetugasController::class, 'setujuiPeminjaman'])->name('peminjaman.setujui');
     Route::post('/peminjaman/{id}/tolak', [PetugasController::class, 'tolakPeminjaman'])->name('peminjaman.tolak');
-    Route::post('/pengembalian/{id}', [PetugasController::class, 'prosesPengembalian'])->name('pengembalian.proses');
+    
+    // Pemantauan Pengembalian
+    Route::get('/pengembalian', [PetugasController::class, 'indexPengembalian'])->name('pengembalian.index');
+    Route::post('/pengembalian/{peminjamanId}/proses', [PetugasController::class, 'prosesPengembalian'])->name('pengembalian.proses');
+    
+    // Cetak Laporan (baru)
+    Route::get('/laporan', [PetugasController::class, 'laporan'])->name('laporan.index');
 });
 
 
-// =========================
-// ROUTE KHUSUS PEMINJAM
-// =========================
-
+//peminjam
 Route::middleware(['auth', 'role:peminjam'])->prefix('peminjam')->name('peminjam.')->group(function () {
+    Route::get('/dashboard', [PeminjamController::class, 'dashboard'])->name('dashboard');
     Route::get('/katalog', [PeminjamController::class, 'katalogAlat'])->name('katalog');
-    Route::post('/peminjaman/ajukan', [PeminjamController::class, 'ajukanPeminjaman'])->name('peminjaman.ajukan');
+    Route::get('/alat/{id}', [PeminjamController::class, 'detailAlat'])->name('alat.show');
+    Route::post('/ajukan', [PeminjamController::class, 'ajukanPeminjaman'])->name('ajukan');
     Route::get('/riwayat', [PeminjamController::class, 'riwayatPeminjaman'])->name('riwayat');
+    Route::post('/pengembalian/{id}/ajukan', [PeminjamController::class, 'ajukanPengembalian'])->name('pengembalian.ajukan');
 });
+
+
+// Route Profil (Harus sudah login)
+Route::middleware('auth')->group(function () {
+    Route::get('/profil', [ProfilController::class, 'edit'])->name('profil.edit');
+    Route::put('/profil', [ProfilController::class, 'update'])->name('profil.update');
+});
+
+// Route Tamu (Belum Login)
+Route::middleware('guest')->group(function () {
+    Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
+    Route::post('/login', [AuthController::class, 'login']);
+    Route::get('/register', [AuthController::class, 'showRegisterForm'])->name('register');
+    Route::post('/register', [AuthController::class, 'register']);
+});
+
+// Route Logout (Harus sudah login)
+Route::post('/logout', [AuthController::class, 'logout'])->name('logout')->middleware('auth');
+
+// Route Unduh & Akses Dokumentasi PDF Proyek di Browser
+Route::get('/dokumentasi-proyek/download', function () {
+    $path = public_path('Penjelasan_Proyek_Peminjaman_Alat.pdf');
+    if (!file_exists($path)) {
+        $path = base_path('Penjelasan_Proyek_Peminjaman_Alat.pdf');
+    }
+    if (!file_exists($path)) {
+        abort(404, 'Dokumen PDF belum ditemukan.');
+    }
+    return response()->download($path, 'Penjelasan_Proyek_Peminjaman_Alat.pdf', [
+        'Content-Type' => 'application/pdf',
+    ]);
+})->name('dokumentasi.download');
+

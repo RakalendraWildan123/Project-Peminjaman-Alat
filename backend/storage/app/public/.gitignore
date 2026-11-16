@@ -1,2 +1,6 @@
-*
+# Izinkan file gambar demo alat dan profil agar ikut terunduh saat git pull
+!alat/
+!alat/*
+!profiles/
+!profiles/*
 !.gitignore

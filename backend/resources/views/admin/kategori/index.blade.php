@@ -16,21 +16,21 @@
         </div>
     @endif
 
-    <div class="bg-white rounded-lg shadow-sm overflow-hidden border border-gray-200">
-        <div class="p-5 border-b border-gray-200 bg-gray-50 flex flex-col md:flex-row justify-between items-center gap-4">
-            <h3 class="text-lg font-bold text-gray-800">Daftar Kategori Alat</h3>
+    <div class="bg-white rounded-2xl shadow-sm overflow-hidden border border-slate-200/80">
+        <div class="p-5 border-b border-slate-100 bg-slate-50/60 flex flex-col md:flex-row justify-between items-center gap-4">
+            <h3 class="text-base font-bold text-slate-800">Daftar Kategori Alat</h3>
 
             <div class="flex items-center gap-3 w-full md:w-auto">
                 <!-- Form Search -->
                 <form action="{{ route('admin.kategori.index') }}" method="GET" class="flex w-full md:w-80">
                     <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari nama kategori..."
-                        class="w-full px-3 py-2 text-sm border border-gray-300 rounded-l-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-                    <button type="submit" class="bg-gray-800 hover:bg-gray-900 text-white px-4 py-2 text-sm font-semibold rounded-r-lg transition">
+                        class="w-full px-3.5 py-2 text-sm border border-slate-200 rounded-l-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 bg-white">
+                    <button type="submit" class="bg-slate-800 hover:bg-slate-900 text-white px-4 py-2 text-sm font-semibold rounded-r-xl transition">
                         Cari
                     </button>
                     @if(request('search'))
                         <a href="{{ route('admin.kategori.index') }}" 
-                           class="ml-2 bg-gray-300 hover:bg-gray-400 text-gray-700 px-3 py-2 text-sm rounded-lg flex items-center transition">
+                           class="ml-2 bg-slate-200 hover:bg-slate-300 text-slate-700 px-3.5 py-2 text-sm font-semibold rounded-xl flex items-center transition">
                             Reset
                         </a>
                     @endif
@@ -38,7 +38,7 @@
 
                 <!-- Tombol Tambah -->
                 <a href="{{ route('admin.kategori.create') }}" 
-                   class="bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold px-4 py-2 rounded-lg transition whitespace-nowrap">
+                   class="bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white text-xs font-semibold px-4 py-2.5 rounded-xl shadow-md shadow-indigo-500/20 transition whitespace-nowrap">
                     + Tambah Kategori
                 </a>
             </div>
@@ -65,10 +65,11 @@
                                         Edit
                                     </a>
 
-                                    <form action="{{ route('admin.kategori.destroy', $kategori->id) }}" method="POST" onsubmit="return confirm('Yakin ingin menghapus kategori ini?')">
+                                    <form action="{{ route('admin.kategori.destroy', $kategori->id) }}" method="POST" class="inline">
                                         @csrf
                                         @method('DELETE')
-                                        <button type="submit" class="bg-red-500 hover:bg-red-600 text-white px-3 py-1.5 rounded text-xs font-semibold transition">
+                                        <button type="button" onclick="confirmHapus(this, 'Kategori: {{ addslashes($kategori->nama_kategori) }}')"
+                                            class="bg-red-500 hover:bg-red-600 text-white px-3 py-1.5 rounded text-xs font-semibold transition cursor-pointer">
                                             Hapus
                                         </button>
                                     </form>

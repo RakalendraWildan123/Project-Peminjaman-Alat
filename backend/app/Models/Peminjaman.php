@@ -10,12 +10,12 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 class Peminjaman extends Model
 {
     protected $table = 'peminjaman';
-
     protected $fillable = [
         'user_id',
         'tgl_pinjam',
         'tgl_kembali_plan',
         'status',
+        'permintaan_kembali',
     ];
 
     protected function casts(): array
@@ -23,6 +23,7 @@ class Peminjaman extends Model
         return [
             'tgl_pinjam' => 'date:Y-m-d',
             'tgl_kembali_plan' => 'date:Y-m-d',
+            'permintaan_kembali' => 'boolean',
         ];
     }
 
@@ -36,8 +37,14 @@ class Peminjaman extends Model
         return $this->hasMany(DetailPinjam::class);
     }
 
+    public function detailPinjams(): HasMany
+    {
+        return $this->detailPinjam();
+    }
+
     public function pengembalian(): HasOne
     {
         return $this->hasOne(Pengembalian::class);
     }
+
 }

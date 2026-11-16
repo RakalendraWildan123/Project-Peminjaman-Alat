@@ -15,7 +15,7 @@ class PetugasController extends Controller
     {
         $search = $request->input('search');
 
-        $peminjamans = Peminjaman::with(['user', 'detailPinjams.alat'])
+        $peminjamans = Peminjaman::with(['user', 'detailPinjam.alat'])
             ->where('status', 'diajukan')
             ->when($search, function ($query, $search) {
                 return $query->whereHas('user', function ($q) use ($search) {
@@ -23,7 +23,8 @@ class PetugasController extends Controller
                 });
             })
             ->latest()
-            ->get();
+            ->paginate(10)
+            ->withQueryString();
 
         return view('petugas.peminjaman.index', compact('peminjamans', 'search'));
     }
@@ -33,11 +34,11 @@ class PetugasController extends Controller
     {
         DB::beginTransaction();
         try {
-            $peminjaman = Peminjaman::with('detailPinjams')->findOrFail($id);
+            $peminjaman = Peminjaman::with('detailPinjam')->findOrFail($id);
             $peminjaman->update(['status' => 'dipinjam']);
 
             // Kurangi stok alat secara otomatis
-            foreach ($peminjaman->detailPinjams as $detail) {
+            foreach ($peminjaman->detailPinjam as $detail) {
                 $alat = Alat::findOrFail($detail->alat_id);
                 $alat->stok -= $detail->jumlah;
                 $alat->save();
@@ -79,7 +80,7 @@ class PetugasController extends Controller
 
         DB::beginTransaction();
         try {
-            $peminjaman = Peminjaman::with('detailPinjams')->findOrFail($peminjamanId);
+            $peminjaman = Peminjaman::with('detailPinjam')->findOrFail($peminjamanId);
 
             // Simpan data pengembalian
             Pengembalian::create([
@@ -94,7 +95,7 @@ class PetugasController extends Controller
             $peminjaman->update(['status' => 'selesai']);
 
             // Kembalikan stok alat ke inventaris
-            foreach ($peminjaman->detailPinjams as $detail) {
+            foreach ($peminjaman->detailPinjam as $detail) {
                 $alat = Alat::findOrFail($detail->alat_id);
                 $alat->stok += $detail->jumlah;
                 $alat->save();
@@ -107,5 +108,74 @@ class PetugasController extends Controller
             DB::rollback();
             return redirect()->back()->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
         }
+    }
+    public function indexPengembalian(Request $request)
+    {
+        $searchAktif = $request->input('search_aktif');
+        $searchRiwayat = $request->input('search_riwayat');
+
+        $peminjamanAktif = Peminjaman::with(['user', 'detailPinjam.alat'])
+            ->where('status', 'dipinjam')
+            ->when($searchAktif, function ($query, $searchAktif) {
+                return $query->whereHas('user', function ($q) use ($searchAktif) {
+                    $q->where('name', 'like', "%{$searchAktif}%");
+                });
+            })
+            ->latest()
+            ->paginate(10, ['*'], 'page_aktif')
+            ->withQueryString();
+
+        $riwayatPengembalian = Pengembalian::with(['peminjaman.user', 'peminjaman.detailPinjam.alat', 'petugas'])
+            ->when($searchRiwayat, function ($query, $searchRiwayat) {
+                return $query->whereHas('peminjaman.user', function ($q) use ($searchRiwayat) {
+                    $q->where('name', 'like', "%{$searchRiwayat}%");
+                })->orWhere('kondisi_kembali', 'like', "%{$searchRiwayat}%");
+            })
+            ->latest()
+            ->paginate(10, ['*'], 'page_riwayat')
+            ->withQueryString();
+
+        return view('petugas.pengembalian.index', compact('peminjamanAktif', 'riwayatPengembalian', 'searchAktif', 'searchRiwayat'));
+    }
+    public function dashboard()
+    {
+        $totalMenunggu = Peminjaman::where('status', 'diajukan')->count();
+        $totalDipinjam = Peminjaman::where('status', 'dipinjam')->count();
+
+        $totalPengembalianBulanIni = Pengembalian::whereMonth('tgl_kembali', now()->month)
+            ->whereYear('tgl_kembali', now()->year)
+            ->count();
+
+        $totalDendaBulanIni = Pengembalian::whereMonth('tgl_kembali', now()->month)
+            ->whereYear('tgl_kembali', now()->year)
+            ->sum('denda');
+
+        $peminjamanTerbaru = Peminjaman::with(['user', 'detailPinjam.alat'])
+            ->where('status', 'diajukan')
+            ->latest()
+            ->take(5)
+            ->get();
+
+        return view('petugas.dashboard', compact(
+            'totalMenunggu', 'totalDipinjam', 'totalPengembalianBulanIni', 'totalDendaBulanIni', 'peminjamanTerbaru'
+        ));
+    }
+
+    // Laporan transaksi pengembalian (filter periode + siap cetak)
+    public function laporan(Request $request)
+    {
+        $tglAwal = $request->input('tgl_awal');
+        $tglAkhir = $request->input('tgl_akhir');
+
+        $query = Pengembalian::with(['peminjaman.user', 'peminjaman.detailPinjam.alat', 'petugas']);
+
+        if ($tglAwal && $tglAkhir) {
+            $query->whereBetween('tgl_kembali', [$tglAwal . ' 00:00:00', $tglAkhir . ' 23:59:59']);
+        }
+
+        $laporan = $query->latest()->get();
+        $totalDenda = $laporan->sum('denda');
+
+        return view('petugas.laporan.index', compact('laporan', 'tglAwal', 'tglAkhir', 'totalDenda'));
     }
 }

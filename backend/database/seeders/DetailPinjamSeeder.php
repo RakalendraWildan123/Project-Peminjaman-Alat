@@ -18,7 +18,10 @@ class DetailPinjamSeeder extends Seeder
         ];
 
         foreach ($details as $detail) {
-            DetailPinjam::create($detail);
+            DetailPinjam::firstOrCreate([
+                'peminjaman_id' => $detail['peminjaman_id'],
+                'alat_id' => $detail['alat_id'],
+            ], $detail);
         }
     }
 }

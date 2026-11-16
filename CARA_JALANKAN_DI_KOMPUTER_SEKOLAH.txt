@@ -1,0 +1,48 @@
+================================================================================
+PANDUAN MENJALANKAN PROYEK DI KOMPUTER SEKOLAH (DENGAN GIT PULL)
+Proyek: Sistem Informasi Peminjaman Alat (AlatKu)
+Repository: https://github.com/RakalendraWildan123/Project-Peminjaman-Alat.git
+================================================================================
+
+Karena di sekolah TIDAK BOLEH menggunakan Flashdisk, seluruh proyek diambil 
+melalui GitHub menggunakan Git Clone / Git Pull.
+
+--------------------------------------------------------------------------------
+LANGKAH 1: CLONE REPOSITORY DI KOMPUTER SEKOLAH
+--------------------------------------------------------------------------------
+Buka Terminal / CMD / Git Bash di komputer sekolah:
+   git clone https://github.com/RakalendraWildan123/Project-Peminjaman-Alat.git
+   cd Project-Peminjaman-Alat
+
+(Jika repo sudah ada sebelumnya, cukup jalankan: git pull origin main)
+
+--------------------------------------------------------------------------------
+LANGKAH 2: JALANKAN APLIKASI (OTOMATIS 1-KLIK)
+--------------------------------------------------------------------------------
+
+>>> CARA 1 (JIKA KOMPUTER SEKOLAH PAKAI DOCKER):
+   1. Buka aplikasi Docker Desktop di komputer sekolah.
+   2. Klik ganda (Double-Click) file: JALANKAN_DOCKER.bat
+   3. File batch tersebut akan otomatis:
+      - Menyiapkan file .env dari .env.example
+      - Menginisialisasi Docker & Database MySQL (otomatis import data dummy)
+      - Menghubungkan penyimpanan gambar (storage:link)
+      - Membuka browser Chrome di http://localhost:8000
+
+>>> CARA 2 (JIKA KOMPUTER SEKOLAH PAKAI XAMPP):
+   1. Buka XAMPP Control Panel, nyalakan 'Apache' dan 'MySQL'.
+   2. Buka browser: http://localhost/phpmyadmin
+      - Buat database baru bernama: API_ujikom
+      - Klik tab 'Import', pilih file: database_backup.sql
+      - Klik tombol 'Import' / 'Kirim' di bagian bawah.
+   3. Klik ganda (Double-Click) file: JALANKAN_XAMPP.bat
+      - Otomatis memasang composer, storage:link, dan menyalakan web di port 8000.
+
+--------------------------------------------------------------------------------
+KREDENSIAL LOGIN UNTUK DEMO PRESENTASI:
+--------------------------------------------------------------------------------
+- Admin    : admin@gmail.com    | Password: password123
+- Petugas  : petugas@gmail.com  | Password: password123
+- Peminjam : rian@gmail.com     | Password: password123
+- File PDF Laporan Proyek       : Penjelasan_Proyek_Peminjaman_Alat.pdf
+================================================================================

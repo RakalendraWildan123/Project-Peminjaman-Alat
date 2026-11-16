@@ -60,9 +60,12 @@ class PeminjamanSeeder extends Seeder
             ],
         ];
         
-        foreach ($peminjaman as $pinjam) {
-            Peminjaman::create($pinjam);
-            
+        foreach ($peminjaman as $index => $pinjam) {
+            Peminjaman::firstOrCreate([
+                'user_id' => $pinjam['user_id'],
+                'tgl_pinjam' => $pinjam['tgl_pinjam'],
+                'tgl_kembali_plan' => $pinjam['tgl_kembali_plan'],
+            ], $pinjam);
         }
     }
 }
