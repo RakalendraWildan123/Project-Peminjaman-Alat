@@ -22,8 +22,11 @@
         
         <!-- Header Logo -->
         <div class="text-center mb-6">
-            <div class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-orange-500 to-amber-500 flex items-center justify-center shadow-lg shadow-orange-500/25 font-extrabold text-white text-xl mx-auto mb-3">
-                ⚡
+            <!-- Icon Foto Profil Default (Belum Ada Profil) -->
+            <div class="w-14 h-14 rounded-full bg-slate-100 border-2 border-slate-200 flex items-center justify-center text-slate-400 mx-auto mb-3 shadow-inner overflow-hidden">
+                <svg class="w-9 h-9 translate-y-1 text-slate-400" fill="currentColor" viewBox="0 0 24 24">
+                    <path fill-rule="evenodd" d="M12 2a5 5 0 100 10 5 5 0 000-10zM4 20a8 8 0 0116 0H4z" clip-rule="evenodd" />
+                </svg>
             </div>
             <h1 class="text-2xl font-extrabold text-slate-900 tracking-tight">Daftar Akun Baru</h1>
             <p class="text-xs text-slate-500 mt-1">Registrasi akun untuk peminjaman alat</p>
