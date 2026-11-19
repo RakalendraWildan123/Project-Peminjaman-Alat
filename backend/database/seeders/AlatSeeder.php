@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Models\Alat;
+use App\Models\Kategori;
 use Illuminate\Database\Seeder;
 
 class AlatSeeder extends Seeder
@@ -12,9 +13,20 @@ class AlatSeeder extends Seeder
      */
     public function run(): void
     {
+        $kategoriList = Kategori::orderBy('id')->get();
+        if ($kategoriList->isEmpty()) {
+            return;
+        }
+
+        $k1 = $kategoriList[0]->id;
+        $k2 = $kategoriList[1]->id ?? $k1;
+        $k3 = $kategoriList[2]->id ?? $k1;
+        $k4 = $kategoriList[3]->id ?? $k1;
+        $k5 = $kategoriList[4]->id ?? $k1;
+
         $alat = [
             [
-                'kategori_id' => 1,
+                'kategori_id' => $k1,
                 'nama_alat' => 'Router Mikrotik RB941-2nD',
                 'stok' => 15,
                 'status_kondisi' => 'Baik',
@@ -22,7 +34,7 @@ class AlatSeeder extends Seeder
                 'gambar' => 'mikrotik_rb941.jpg',
             ],
             [
-                'kategori_id' => 2,
+                'kategori_id' => $k2,
                 'nama_alat' => 'Kamera DSLR Canon EOS 3000D',
                 'stok' => 5,
                 'status_kondisi' => 'Baik',
@@ -30,7 +42,7 @@ class AlatSeeder extends Seeder
                 'gambar' => 'Canon_3000D.jpg',
             ],
             [
-                'kategori_id' => 3,
+                'kategori_id' => $k3,
                 'nama_alat' => 'Mini PC Intel NUC 11',
                 'stok' => 8,
                 'status_kondisi' => 'Baik',
@@ -38,7 +50,7 @@ class AlatSeeder extends Seeder
                 'gambar' => 'intel_nuc.jpg',
             ],
             [
-                'kategori_id' => 4,
+                'kategori_id' => $k4,
                 'nama_alat' => 'Tang Crimping RJ45/RJ11',
                 'stok' => 20,
                 'status_kondisi' => 'Baik',
@@ -46,7 +58,7 @@ class AlatSeeder extends Seeder
                 'gambar' => 'crimping_proskit.jpg',
             ],
             [
-                'kategori_id' => 5,
+                'kategori_id' => $k5,
                 'nama_alat' => 'Adapter HDMI to VGA dengan Audio',
                 'stok' => 25,
                 'status_kondisi' => 'Baik',
