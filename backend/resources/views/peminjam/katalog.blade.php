@@ -50,9 +50,11 @@
             <div>
                 <!-- Gambar Alat -->
                 <div class="aspect-video sm:aspect-square bg-slate-100 relative overflow-hidden flex items-center justify-center">
-                    @if($alat->gambar)
-                        <img src="{{ asset($alat->gambar) }}" alt="{{ $alat->nama_alat }}"
+                    @if($alat->gambar_url)
+                        <img src="{{ $alat->gambar_url }}" alt="{{ $alat->nama_alat }}"
+                             onerror="this.style.display='none'; this.nextElementSibling.classList.remove('hidden');"
                              class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
+                        <span class="text-5xl group-hover:scale-110 transition-transform hidden">🛠️</span>
                     @else
                         <span class="text-5xl group-hover:scale-110 transition-transform">🛠️</span>
                     @endif

@@ -44,15 +44,24 @@
                             <span class="w-2 h-2 rounded-full bg-blue-500"></span>
                             Sedang Dipinjam
                         </span>
-                    @elseif($item->status == 'selesai')
+                    @elseif(in_array($item->status, ['selesai', 'dikembalikan']))
                         <span class="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-bold rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
                             <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
                             Selesai Dikembalikan
                         </span>
-                    @else
+                    @elseif($item->status == 'telat')
+                        <span class="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-bold rounded-full bg-purple-50 text-purple-700 border border-purple-200">
+                            <span class="w-2 h-2 rounded-full bg-purple-500"></span>
+                            Telat Dikembalikan
+                        </span>
+                    @elseif($item->status == 'ditolak')
                         <span class="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-bold rounded-full bg-red-50 text-red-700 border border-red-200">
                             <span class="w-2 h-2 rounded-full bg-red-500"></span>
                             Ditolak
+                        </span>
+                    @else
+                        <span class="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-bold rounded-full bg-slate-100 text-slate-700 border border-slate-200">
+                            {{ ucfirst($item->status) }}
                         </span>
                     @endif
                 </div>

@@ -30,7 +30,7 @@
                             <td class="py-3 px-4 border-b font-medium">{{ $p->peminjaman->user->name ?? '-' }}</td>
                             <td class="py-3 px-4 border-b">@foreach($p->peminjaman->detailPinjam as $d)<span class="text-xs bg-gray-200 px-1.5 py-0.5 rounded">{{ $d->alat->nama_alat ?? '-' }}</span>@endforeach</td>
                             <td class="py-3 px-4 border-b">{{ $p->tgl_kembali }}</td>
-                            <td class="py-3 px-4 border-b"><span class="px-2.5 py-1 text-xs font-semibold rounded-full @if($p->kondisi_kembali == 'Baik') bg-emerald-100 text-emerald-800 @else bg-red-100 text-red-800 @endif">{{ $p->kondisi_kembali }}</span></td>
+                            <td class="py-3 px-4 border-b"><span class="px-2.5 py-1 text-xs font-semibold rounded-full @if(str_contains(strtolower($p->kondisi_kembali), 'baik')) bg-emerald-100 text-emerald-800 @else bg-amber-100 text-amber-800 @endif">{{ $p->kondisi_kembali }}</span></td>
                             <td class="py-3 px-4 border-b">{{ $p->denda > 0 ? 'Rp ' . number_format($p->denda) : '-' }}</td>
                             <td class="py-3 px-4 border-b">{{ $p->petugas->name ?? '-' }}</td>
                             <td class="py-3 px-4 border-b">

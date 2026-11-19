@@ -35,24 +35,34 @@ class PetugasController extends Controller
         DB::beginTransaction();
         try {
             $peminjaman = Peminjaman::with('detailPinjam')->findOrFail($id);
-            $peminjaman->update(['status' => 'dipinjam']);
 
-            // Kurangi stok alat secara otomatis
+            if ($peminjaman->status !== 'diajukan') {
+                DB::rollBack();
+                return redirect()->back()->with('error', 'Peminjaman tidak dalam status diajukan.');
+            }
+
+            // Validasi ketersediaan stok & kurangi stok alat secara atomik
             foreach ($peminjaman->detailPinjam as $detail) {
-                $alat = Alat::findOrFail($detail->alat_id);
+                $alat = Alat::where('id', $detail->alat_id)->lockForUpdate()->firstOrFail();
+                if ($alat->stok < $detail->jumlah) {
+                    DB::rollBack();
+                    return redirect()->back()->with('error', "Stok alat '{$alat->nama_alat}' tidak mencukupi untuk disetujui (tersedia: {$alat->stok}, diminta: {$detail->jumlah}).");
+                }
                 $alat->stok -= $detail->jumlah;
                 $alat->save();
             }
 
+            $peminjaman->update(['status' => 'dipinjam']);
+
             DB::commit();
             return redirect()->back()->with('success', 'Peminjaman disetujui dan stok alat dikurangi.');
         } catch (\Exception $e) {
-            DB::rollback();
+            DB::rollBack();
             return redirect()->back()->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
         }
     }
 
-    // Menolak Peminjaman (Menghapus pengajuan agar siswa bisa mengajukan ulang)
+    // Menolak Peminjaman
     public function tolakPeminjaman($id)
     {
         try {
@@ -60,7 +70,7 @@ class PetugasController extends Controller
 
             // Pastikan statusnya memang masih diajukan
             if ($peminjaman->status == 'diajukan') {
-                $peminjaman->delete();
+                $peminjaman->update(['status' => 'ditolak']);
                 return redirect()->back()->with('success', 'Pengajuan peminjaman berhasil ditolak.');
             }
 
@@ -75,12 +85,17 @@ class PetugasController extends Controller
     {
         $request->validate([
             'kondisi_kembali' => 'required|string',
-            'denda' => 'nullable|integer',
+            'denda' => 'nullable|integer|min:0',
         ]);
 
         DB::beginTransaction();
         try {
             $peminjaman = Peminjaman::with('detailPinjam')->findOrFail($peminjamanId);
+
+            if ($peminjaman->status !== 'dipinjam') {
+                DB::rollBack();
+                return redirect()->back()->with('error', 'Peminjaman ini sudah diproses sebelumnya.');
+            }
 
             // Simpan data pengembalian
             Pengembalian::create([
@@ -91,12 +106,16 @@ class PetugasController extends Controller
                 'petugas_id' => auth()->id(),
             ]);
 
-            // Update status peminjaman jadi selesai
-            $peminjaman->update(['status' => 'selesai']);
+            // Cek keterlambatan
+            $tglKembaliPlan = \Carbon\Carbon::parse($peminjaman->tgl_kembali_plan)->startOfDay();
+            $hariIni = \Carbon\Carbon::now()->startOfDay();
+            $statusAkhir = $hariIni->greaterThan($tglKembaliPlan) ? 'telat' : 'selesai';
+
+            $peminjaman->update(['status' => $statusAkhir]);
 
             // Kembalikan stok alat ke inventaris
             foreach ($peminjaman->detailPinjam as $detail) {
-                $alat = Alat::findOrFail($detail->alat_id);
+                $alat = Alat::where('id', $detail->alat_id)->lockForUpdate()->firstOrFail();
                 $alat->stok += $detail->jumlah;
                 $alat->save();
             }
@@ -105,7 +124,7 @@ class PetugasController extends Controller
             return redirect()->back()->with('success', 'Pengembalian berhasil dicatat dan stok dipulihkan.');
 
         } catch (\Exception $e) {
-            DB::rollback();
+            DB::rollBack();
             return redirect()->back()->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
         }
     }

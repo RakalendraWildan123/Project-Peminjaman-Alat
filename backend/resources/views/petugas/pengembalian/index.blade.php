@@ -138,8 +138,8 @@
                         <td class="py-3 px-4 border-b">{{ $p->tgl_kembali }}</td>
                         <td class="py-3 px-4 border-b">
                             <span class="px-2.5 py-1 text-xs font-semibold rounded-full
-                                @if($p->kondisi_kembali == 'Baik') bg-emerald-100 text-emerald-800
-                                @else bg-red-100 text-red-800 @endif">
+                                @if(str_contains(strtolower($p->kondisi_kembali), 'baik')) bg-emerald-100 text-emerald-800
+                                @else bg-amber-100 text-amber-800 @endif">
                                 {{ $p->kondisi_kembali }}
                             </span>
                         </td>

@@ -16,7 +16,7 @@ class LaporanController extends Controller
         $validator = Validator::make($request->all(), [
             'start_date' => ['nullable', 'date', 'date_format:Y-m-d'],
             'end_date' => ['nullable', 'date', 'date_format:Y-m-d', 'after_or_equal:start_date'],
-            'status' => ['nullable', 'string', 'in:diajukan,dipinjam,dikembalikan,telat'],
+            'status' => ['nullable', 'string', 'in:diajukan,dipinjam,dikembalikan,selesai,telat,ditolak'],
             'per_page' => ['nullable', 'integer', 'min:1', 'max:100'],
         ]);
 

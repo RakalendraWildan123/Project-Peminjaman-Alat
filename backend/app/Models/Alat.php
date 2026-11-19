@@ -26,6 +26,28 @@ class Alat extends Model
         ];
     }
 
+    public function getGambarUrlAttribute(): ?string
+    {
+        if (!$this->gambar) {
+            return null;
+        }
+
+        if (str_starts_with($this->gambar, 'http://') || str_starts_with($this->gambar, 'https://')) {
+            return $this->gambar;
+        }
+
+        $path = ltrim($this->gambar, '/');
+        if (str_starts_with($path, 'storage/')) {
+            return asset($path);
+        }
+
+        if (str_starts_with($path, 'alat/')) {
+            return asset('storage/' . $path);
+        }
+
+        return asset('storage/alat/' . $path);
+    }
+
     public function kategori(): BelongsTo
     {
         return $this->belongsTo(Kategori::class);

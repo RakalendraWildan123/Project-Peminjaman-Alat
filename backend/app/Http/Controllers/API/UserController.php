@@ -86,10 +86,17 @@ class UserController extends Controller
 
     public function destroy(User $user): JsonResponse
     {
-        DB::transaction(function () use ($user) {
+        if (auth()->id() === $user->id) {
+            return response()->json([
+                'message' => 'Anda tidak dapat menghapus akun Anda sendiri.'
+            ], 422);
+        }
 
+        DB::transaction(function () use ($user) {
             if ($user->foto_profile) {
-                Storage::disk('public')->delete($user->foto_profile);
+                $cleanPath = ltrim(str_replace('/storage/', '', $user->foto_profile), '/');
+                $cleanPath = str_starts_with($cleanPath, 'storage/') ? substr($cleanPath, 8) : $cleanPath;
+                Storage::disk('public')->delete($cleanPath);
             }
 
             $user->delete();

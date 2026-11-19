@@ -1,4 +1,3 @@
-```php
 @extends('layouts.app')
 
 @section('title', 'Kelola Peminjaman – Panel Admin')
@@ -96,8 +95,10 @@
                                 <span class="px-2.5 py-1 text-xs font-semibold rounded-full
                                     @if($peminjaman->status == 'diajukan') bg-yellow-100 text-yellow-800
                                     @elseif($peminjaman->status == 'dipinjam') bg-blue-100 text-blue-800
-                                    @elseif($peminjaman->status == 'selesai') bg-emerald-100 text-emerald-800
-                                    @else bg-red-100 text-red-800
+                                    @elseif(in_array($peminjaman->status, ['selesai', 'dikembalikan'])) bg-emerald-100 text-emerald-800
+                                    @elseif($peminjaman->status == 'telat') bg-purple-100 text-purple-800
+                                    @elseif($peminjaman->status == 'ditolak') bg-red-100 text-red-800
+                                    @else bg-gray-100 text-gray-800
                                     @endif">
                                     {{ ucfirst($peminjaman->status) }}
                                 </span>
@@ -117,11 +118,14 @@
                                         <option value="dipinjam" {{ $peminjaman->status == 'dipinjam' ? 'selected' : '' }}>
                                             Dipinjam
                                         </option>
-                                        <option value="selesai" {{ $peminjaman->status == 'selesai' ? 'selected' : '' }}>
+                                        <option value="selesai" {{ in_array($peminjaman->status, ['selesai', 'dikembalikan']) ? 'selected' : '' }}>
                                             Selesai
                                         </option>
                                         <option value="telat" {{ $peminjaman->status == 'telat' ? 'selected' : '' }}>
                                             Telat
+                                        </option>
+                                        <option value="ditolak" {{ $peminjaman->status == 'ditolak' ? 'selected' : '' }}>
+                                            Ditolak
                                         </option>
                                     </select>
                                 </form>
@@ -147,4 +151,3 @@
         </div>
     </div>
 @endsection
-```

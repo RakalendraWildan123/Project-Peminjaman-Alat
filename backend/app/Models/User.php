@@ -48,6 +48,19 @@ class User extends Authenticatable
 
     public function getFotoAttribute(): ?string
     {
-        return $this->foto_profile;
+        if (!$this->foto_profile) {
+            return null;
+        }
+
+        if (str_starts_with($this->foto_profile, 'http://') || str_starts_with($this->foto_profile, 'https://')) {
+            return $this->foto_profile;
+        }
+
+        $path = ltrim($this->foto_profile, '/');
+        if (str_starts_with($path, 'storage/')) {
+            return asset($path);
+        }
+
+        return asset('storage/' . $path);
     }
 }

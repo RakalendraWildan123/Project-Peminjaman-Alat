@@ -28,7 +28,7 @@ class AdminController extends Controller
         $statusPeminjamanCounts = [
             'Diajukan' => Peminjaman::where('status', 'diajukan')->count(),
             'Dipinjam' => Peminjaman::where('status', 'dipinjam')->count(),
-            'Selesai'  => Peminjaman::where('status', 'selesai')->count(),
+            'Selesai'  => Peminjaman::whereIn('status', ['selesai', 'dikembalikan', 'telat'])->count(),
             'Ditolak'  => Peminjaman::where('status', 'ditolak')->count(),
         ];
 
@@ -144,8 +144,12 @@ class AdminController extends Controller
         // Handle Update Gambar jika ada file baru
         if ($request->hasFile('gambar')) {
             // Hapus gambar lama jika ada
-            if ($alat->gambar && file_exists(public_path($alat->gambar))) {
-                unlink(public_path($alat->gambar));
+            if ($alat->gambar) {
+                $cleanOld = ltrim($alat->gambar, '/');
+                $oldPath = str_starts_with($cleanOld, 'storage/') ? public_path($cleanOld) : public_path('storage/' . $cleanOld);
+                if (file_exists($oldPath) && is_file($oldPath)) {
+                    @unlink($oldPath);
+                }
             }
 
             $file = $request->file('gambar');
@@ -165,8 +169,12 @@ class AdminController extends Controller
         $alat = Alat::findOrFail($id);
 
         // Hapus file gambar fisik jika ada
-        if ($alat->gambar && file_exists(public_path($alat->gambar))) {
-            unlink(public_path($alat->gambar));
+        if ($alat->gambar) {
+            $cleanPath = ltrim($alat->gambar, '/');
+            $fullPath = str_starts_with($cleanPath, 'storage/') ? public_path($cleanPath) : public_path('storage/' . $cleanPath);
+            if (file_exists($fullPath) && is_file($fullPath)) {
+                @unlink($fullPath);
+            }
         }
 
         $alat->delete();
@@ -253,6 +261,10 @@ class AdminController extends Controller
 
     public function destroyUser($id)
     {
+        if (auth()->id() == $id) {
+            return redirect()->route('admin.user.index')->with('error', 'Anda tidak dapat menghapus akun Anda sendiri.');
+        }
+
         $user = User::findOrFail($id);
         $user->delete();
 
@@ -416,13 +428,13 @@ class AdminController extends Controller
         }
     }
 
-    // 4. Memperbarui status peminjaman (Misal: dari diajukan -> dipinjam / selesai)
+    // 4. Memperbarui status peminjaman (Misal: dari diajukan -> dipinjam / selesai / ditolak)
     public function updateStatusPeminjaman(Request $request, $id)
     {
         $peminjaman = Peminjaman::with('detailPinjam.alat')->findOrFail($id);
 
         $request->validate([
-            'status' => 'required|in:diajukan,dipinjam,selesai,telat',
+            'status' => 'required|in:diajukan,dipinjam,selesai,dikembalikan,ditolak,telat',
         ]);
 
         DB::beginTransaction();
@@ -434,16 +446,17 @@ class AdminController extends Controller
             if ($statusLama != 'dipinjam' && $statusBaru == 'dipinjam') {
                 // Kurangi stok karena barang resmi dipinjam
                 foreach ($peminjaman->detailPinjam as $detail) {
-                    $alat = $detail->alat;
+                    $alat = Alat::where('id', $detail->alat_id)->lockForUpdate()->firstOrFail();
                     if ($alat->stok < $detail->jumlah) {
                         throw new \Exception("Stok alat {$alat->nama_alat} tidak mencukupi untuk dipinjam.");
                     }
                     $alat->decrement('stok', $detail->jumlah);
                 }
-            } elseif ($statusLama == 'dipinjam' && ($statusBaru == 'selesai')) {
-                // Kembalikan stok karena barang sudah dikembalikan (selesai)
+            } elseif ($statusLama == 'dipinjam' && in_array($statusBaru, ['selesai', 'dikembalikan', 'ditolak'])) {
+                // Kembalikan stok karena barang sudah kembali / dibatalkan
                 foreach ($peminjaman->detailPinjam as $detail) {
-                    $detail->alat->increment('stok', $detail->jumlah);
+                    $alat = Alat::where('id', $detail->alat_id)->lockForUpdate()->firstOrFail();
+                    $alat->increment('stok', $detail->jumlah);
                 }
             }
 
@@ -513,6 +526,7 @@ class AdminController extends Controller
             $peminjaman = Peminjaman::with('detailPinjam')->findOrFail($peminjamanId);
 
             if ($peminjaman->status !== 'dipinjam') {
+                DB::rollBack();
                 return redirect()->back()->with('error', 'Peminjaman ini sudah diproses sebelumnya.');
             }
 
@@ -524,10 +538,15 @@ class AdminController extends Controller
                 'petugas_id'      => auth()->id(), // admin yang proses, tetap tercatat di kolom ini
             ]);
 
-            $peminjaman->update(['status' => 'selesai']);
+            // Cek keterlambatan
+            $tglKembaliPlan = \Carbon\Carbon::parse($peminjaman->tgl_kembali_plan)->startOfDay();
+            $hariIni = \Carbon\Carbon::now()->startOfDay();
+            $statusAkhir = $hariIni->greaterThan($tglKembaliPlan) ? 'telat' : 'selesai';
+
+            $peminjaman->update(['status' => $statusAkhir]);
 
             foreach ($peminjaman->detailPinjam as $detail) {
-                $alat = Alat::findOrFail($detail->alat_id);
+                $alat = Alat::where('id', $detail->alat_id)->lockForUpdate()->firstOrFail();
                 $alat->stok += $detail->jumlah;
                 $alat->save();
             }

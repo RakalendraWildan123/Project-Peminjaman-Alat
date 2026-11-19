@@ -15,8 +15,11 @@
     <div class="grid md:grid-cols-2 gap-0">
         <!-- Kolom Foto -->
         <div class="aspect-square bg-slate-100 relative flex items-center justify-center p-8 border-b md:border-b-0 md:border-r border-slate-100">
-            @if($alat->gambar)
-                <img src="{{ asset($alat->gambar) }}" alt="{{ $alat->nama_alat }}" class="w-full h-full object-contain rounded-2xl">
+            @if($alat->gambar_url)
+                <img src="{{ $alat->gambar_url }}" alt="{{ $alat->nama_alat }}"
+                     onerror="this.style.display='none'; this.nextElementSibling.classList.remove('hidden');"
+                     class="w-full h-full object-contain rounded-2xl">
+                <span class="text-7xl hidden">🛠️</span>
             @else
                 <span class="text-7xl">🛠️</span>
             @endif

@@ -18,7 +18,7 @@ class PeminjamController extends Controller
 
         $totalDiajukan = Peminjaman::where('user_id', $userId)->where('status', 'diajukan')->count();
         $totalDipinjam = Peminjaman::where('user_id', $userId)->where('status', 'dipinjam')->count();
-        $totalSelesai = Peminjaman::where('user_id', $userId)->where('status', 'selesai')->count();
+        $totalSelesai = Peminjaman::where('user_id', $userId)->whereIn('status', ['selesai', 'dikembalikan', 'telat'])->count();
         $totalAlatTersedia = Alat::where('stok', '>', 0)->count();
 
         // Pinjaman yang saat ini sedang aktif di tangan peminjam
@@ -93,7 +93,7 @@ class PeminjamController extends Controller
     public function ajukanPeminjaman(Request $request)
     {
         $request->validate([
-            'tgl_kembali_plan' => 'required|date|after:today',
+            'tgl_kembali_plan' => 'required|date|after_or_equal:today',
             'alat_id' => 'required',
             'jumlah' => 'required',
         ]);
@@ -145,7 +145,11 @@ class PeminjamController extends Controller
             ->where('user_id', auth()->id());
 
         if ($tab && $tab !== 'semua') {
-            $query->where('status', $tab);
+            if ($tab === 'selesai') {
+                $query->whereIn('status', ['selesai', 'dikembalikan', 'telat']);
+            } else {
+                $query->where('status', $tab);
+            }
         }
 
         $peminjamans = $query->latest()

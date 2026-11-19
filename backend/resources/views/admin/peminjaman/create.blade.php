@@ -89,4 +89,3 @@
     }
 </script>
 @endsection
-```[cite: 26, 27]

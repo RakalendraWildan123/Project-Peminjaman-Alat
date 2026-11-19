@@ -38,11 +38,12 @@ class ProfilController extends Controller
 
         if ($request->hasFile('foto')) {
             if ($user->foto_profile) {
-                $oldPath = str_replace('/storage/', '', $user->foto_profile);
-                \Illuminate\Support\Facades\Storage::disk('public')->delete($oldPath);
+                $cleanOld = ltrim(str_replace('/storage/', '', $user->foto_profile), '/');
+                $cleanOld = str_starts_with($cleanOld, 'storage/') ? substr($cleanOld, 8) : $cleanOld;
+                \Illuminate\Support\Facades\Storage::disk('public')->delete($cleanOld);
             }
             $path = $request->file('foto')->store('profiles', 'public');
-            $user->foto_profile = '/storage/' . $path;
+            $user->foto_profile = 'storage/' . $path;
         }
 
         $user->save();

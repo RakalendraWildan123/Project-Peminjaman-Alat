@@ -1,59 +1,245 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Panduan Mengatasi Error dan Troubleshooting Proyek
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Buku panduan praktis ini berisi solusi lengkap langkah demi langkah untuk mengatasi berbagai kemungkinan error yang sering terjadi saat menginstal, menyalakan Docker, menjalankan Composer, migrasi database, dan mengoperasikan aplikasi ini.
 
-## About Laravel
+---
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## Daftar Isi Panduan
+1. Masalah Docker dan Docker Compose
+2. Masalah Composer dan Dependensi PHP
+3. Masalah Database MySQL dan Migrasi
+4. Masalah Port Bentrok (Port Already in Use)
+5. Masalah Kunci Aplikasi dan File Konfigurasi (.env)
+6. Masalah Gambar Upload Tidak Muncul (Storage Link)
+7. Masalah Izin Folder (Permission Denied)
+8. Masalah Cache yang Menumpuk
+9. Perintah Pemulihan Cepat (One-Line Fix)
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+---
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+## 1. Masalah Docker dan Docker Compose
 
-## Learning Laravel
+### Kasus A: Muncul Pesan "error during connect ... docker client must be run with elevated privileges" atau "Cannot connect to the Docker daemon"
+* **Penyebab:** Aplikasi Docker Desktop di komputer Anda belum dinyalakan atau proses mesin Docker belum selesai berjalan dengan sempurna.
+* **Solusi:**
+  1. Buka aplikasi **Docker Desktop** dari menu Start Windows Anda.
+  2. Tunggu beberapa saat sampai ikon Docker di pojok kiri bawah jendela Docker Desktop berubah warna menjadi hijau dengan tulisan **Engine running**.
+  3. Buka kembali terminal PowerShell atau CMD, lalu jalankan ulang perintah:
+     ```bash
+     docker compose up -d
+     ```
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
+### Kasus B: Muncul Pesan "Conflict. The container name is already in use"
+* **Penyebab:** Container dengan nama yang sama (misalnya `laravel-UJICOBA` atau `MySQL-UJICOBA`) masih tersisa atau sedang berjalan dari sesi sebelumnya.
+* **Solusi:**
+  Hentikan dan bersihkan container lama dengan perintah berikut di terminal:
+  ```bash
+  docker compose down
+  ```
+  Atau jika masih membandel, paksa hapus container lama tersebut dengan perintah:
+  ```bash
+  docker rm -f laravel-UJICOBA MySQL-UJICOBA PhpMyadmin-UJICOBA
+  ```
+  Setelah itu, nyalakan kembali dengan perintah:
+  ```bash
+  docker compose up -d
+  ```
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+---
 
-## Laravel Sponsors
+## 2. Masalah Composer dan Dependensi PHP
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+### Kasus A: Muncul Pesan "vendor/autoload.php was not found" atau "Failed to open stream: No such file or directory"
+* **Penyebab:** Folder pustaka `vendor` belum terpasang atau proses unduh paket belum selesai.
+* **Solusi:**
+  Jika Anda menggunakan Docker, jalankan perintah instalasi Composer langsung di dalam container:
+  ```bash
+  docker exec -it laravel-UJICOBA composer install
+  ```
+  Jika Anda menjalankan PHP secara lokal di komputer (tanpa Docker), masuk ke folder backend terlebih dahulu lalu jalankan:
+  ```bash
+  cd backend
+  composer install
+  ```
 
-### Premium Partners
+### Kasus B: Muncul Pesan "Your requirements could not be resolved for your PHP version" atau "The requested PHP extension is missing"
+* **Penyebab:** Komputer lokal Anda memiliki versi PHP yang lebih rendah atau ada ekstensi PHP yang belum diaktifkan (misalnya ekstensi `pdo_mysql`, `curl`, `gd`, atau `zip`).
+* **Solusi Terbaik:**
+  Gunakan Docker karena Docker sudah menyediakan lingkungan PHP versi 8.4 lengkap dengan seluruh ekstensi yang dibutuhkan. Anda tidak perlu memasang atau mengedit file `php.ini` di laptop Anda. Cukup jalankan perintah Composer melalui Docker seperti pada Kasus A di atas.
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+### Kasus C: Muncul Pesan "Allowed memory size of ... bytes exhausted" saat Composer Install
+* **Penyebab:** Batas memori PHP bawaan komputer tidak cukup saat mengunduh paket Composer.
+* **Solusi:**
+  Jalankan Composer dengan menonaktifkan batas memori menggunakan perintah:
+  ```bash
+  docker exec -it laravel-UJICOBA php -d memory_limit=-1 /usr/bin/composer install
+  ```
 
-## Contributing
+---
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+## 3. Masalah Database MySQL dan Migrasi
 
-## Code of Conduct
+### Kasus A: Muncul Pesan "SQLSTATE[HY000] [2002] Connection refused"
+* **Penyebab:** Aplikasi Laravel mencoba menghubungi database, tetapi container MySQL belum selesai menyala atau belum siap menerima sambungan.
+* **Solusi:**
+  1. Saat pertama kali `docker compose up -d` dijalankan, MySQL membutuhkan waktu sekitar 15 sampai 30 detik untuk menyiapkan data awal.
+  2. Tunggu sekitar 20 detik, lalu jalankan kembali perintah migrasi:
+     ```bash
+     docker exec -it laravel-UJICOBA php artisan migrate --seed
+     ```
+  3. Pastikan konfigurasi host di dalam file `backend/.env` tertulis:
+     ```env
+     DB_HOST=mysql-server
+     DB_PORT=3306
+     ```
+     Catatan: Jika Anda mengakses database dari luar Docker menggunakan aplikasi Navicat atau DBeaver di laptop, gunakan host `127.0.0.1` dan port `3307`. Namun untuk aplikasi Laravel yang berjalan di dalam Docker, tetap gunakan host `mysql-server` dan port `3306`.
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+### Kasus B: Muncul Pesan "Access denied for user 'api_ujikom'@'...' (using password: YES)"
+* **Penyebab:** Nama pengguna atau kata sandi database pada file `backend/.env` tidak sama dengan pengaturan di file `docker-compose.yml`.
+* **Solusi:**
+  Buka file `backend/.env` dan pastikan bagian database tertulis persis seperti ini:
+  ```env
+  DB_CONNECTION=mysql
+  DB_HOST=mysql-server
+  DB_PORT=3306
+  DB_DATABASE=API_ujikom
+  DB_USERNAME=api_ujikom
+  DB_PASSWORD=api_ujikom
+  ```
 
-## Security Vulnerabilities
+### Kasus C: Data Database Kacau, Duplikat, atau Ingin Mengulang dari Awal
+* **Penyebab:** Terjadi salah input data saat pengujian atau ingin membersihkan seluruh tabel agar kembali ke kondisi awal bawaan seeder.
+* **Solusi:**
+  Jalankan perintah reset bersih berikut:
+  ```bash
+  docker exec -it laravel-UJICOBA php artisan migrate:fresh --seed
+  ```
+  Perintah ini akan menghapus semua tabel lama, membuat ulang tabel dari file migrasi yang bersih, dan mengisi kembali akun pengujian admin, petugas, serta siswa.
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+---
 
-## License
+## 4. Masalah Port Bentrok (Port Already in Use)
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+### Kasus: Muncul Pesan "Bind for 0.0.0.0:8000 failed: port is already allocated" atau "port 3307 is already allocated"
+* **Penyebab:** Ada aplikasi lain di laptop Anda yang sedang menggunakan port yang sama. Contoh umum:
+  * Port 8000 sedang digunakan oleh proyek Laravel lain.
+  * Port 3307 sedang digunakan oleh aplikasi database lain.
+  * Port 8081 sedang digunakan oleh aplikasi lain.
+
+### Solusi 1: Mematikan Aplikasi yang Memakai Port Tersebut
+1. Buka PowerShell di Windows sebagai Administrator.
+2. Cari nomor proses (PID) yang memakai port 8000 dengan perintah:
+   ```powershell
+   netstat -ano | findstr :8000
+   ```
+3. Lihat angka paling kanan (misalnya angka 12345), lalu matikan prosesnya dengan perintah:
+   ```powershell
+   taskkill /PID 12345 /F
+   ```
+
+### Solusi 2: Mengganti Nomor Port di File docker-compose.yml
+Jika Anda tidak ingin mematikan aplikasi lain tersebut, Anda bisa mengganti angka port di file `docker-compose.yml`.
+
+Sebagai contoh, ubah baris port aplikasi dari:
+```yaml
+ports:
+  - "8000:8000"
+```
+Menjadi angka port lain yang kosong, misalnya:
+```yaml
+ports:
+  - "8080:8000"
+```
+Setelah diubah dan disimpan, jalankan ulang:
+```bash
+docker compose up -d
+```
+Maka web dapat diakses melalui alamat http://localhost:8080.
+
+---
+
+## 5. Masalah Kunci Aplikasi dan File Konfigurasi (.env)
+
+### Kasus A: Muncul Pesan "No application encryption key has been specified"
+* **Penyebab:** Kunci enkripsi keamanan Laravel belum dibuat pada file `.env`.
+* **Solusi:**
+  Jalankan perintah pembuatan kunci otomatis berikut:
+  ```bash
+  docker exec -it laravel-UJICOBA php artisan key:generate
+  ```
+
+### Kasus B: File backend/.env Tidak Ditemukan
+* **Penyebab:** File `.env` belum dibuat dari file contoh `.env.example`.
+* **Solusi:**
+  Salin file contoh menjadi file `.env` dengan perintah:
+  ```bash
+  copy backend\.env.example backend\.env
+  ```
+  Kemudian jalankan kembali pembuatan kunci:
+  ```bash
+  docker exec -it laravel-UJICOBA php artisan key:generate
+  ```
+
+---
+
+## 6. Masalah Gambar Upload Tidak Muncul (Storage Link)
+
+### Kasus: Foto Alat atau Foto Profil yang Diupload Berwarna Abu-Abu atau Menghasilkan Error 404 Not Found
+* **Penyebab:** Tautan penghubung (symlink) dari folder penyimpanan fisik `storage/app/public` menuju folder web publik `public/storage` belum terpasang atau terputus.
+* **Solusi:**
+  Jalankan perintah pembuatan tautan penyimpanan berikut di dalam container:
+  ```bash
+  docker exec -it laravel-UJICOBA php artisan storage:link --force
+  ```
+  Setelah itu, segarkan (refresh) halaman browser Anda dengan menekan tombol Ctrl dan F5 secara bersamaan.
+
+---
+
+## 7. Masalah Izin Folder (Permission Denied)
+
+### Kasus: Muncul Pesan "The stream or file .../storage/logs/laravel.log could not be opened: failed to open stream: Permission denied"
+* **Penyebab:** Sistem operasi membatasi hak akses web server untuk menulis file catatan log atau menyimpan file unggahan di folder `storage`.
+* **Solusi:**
+  Beri hak akses penuh pada folder storage dan cache dengan perintah:
+  ```bash
+  docker exec -it laravel-UJICOBA chmod -R 777 storage bootstrap/cache
+  ```
+
+---
+
+## 8. Masalah Cache yang Menumpuk
+
+### Kasus: Halaman Web Tidak Berubah Padahal File Blade atau Kode Controller Sudah Diedit
+* **Penyebab:** Laravel menyimpan salinan sementara (cache) dari tampilan halaman, rute URL, dan konfigurasi agar website berjalan cepat. Terkadang cache lama masih tersimpan sehingga perubahan kode belum terlihat.
+* **Solusi:**
+  Bersihkan seluruh cache aplikasi dengan satu perintah sakti:
+  ```bash
+  docker exec -it laravel-UJICOBA php artisan optimize:clear
+  ```
+  Perintah ini otomatis membersihkan:
+  * Cache konfigurasi sistem
+  * Cache daftar rute URL
+  * Cache kompilasi template Blade
+  * Cache data aplikasi sementara
+
+---
+
+## 9. Perintah Pemulihan Cepat (One-Line Fix)
+
+Jika Anda bingung error apa yang sedang terjadi dan ingin membuat aplikasi kembali berjalan normal seperti baru pertama kali dipasang, lakukan 3 langkah pemulihan cepat ini di terminal:
+
+1. **Langkah 1: Matikan dan Nyalakan Ulang Kontainer:**
+   ```bash
+   docker compose down && docker compose up -d
+   ```
+2. **Langkah 2: Bersihkan Cache dan Pasang Tautan Gambar:**
+   ```bash
+   docker exec -it laravel-UJICOBA php artisan optimize:clear
+   docker exec -it laravel-UJICOBA php artisan storage:link --force
+   ```
+3. **Langkah 3: Reset dan Isi Ulang Database:**
+   ```bash
+   docker exec -it laravel-UJICOBA php artisan migrate:fresh --seed
+   ```
+
+Setelah ketiga langkah di atas selesai, buka browser Anda di http://localhost:8000 dan aplikasi siap digunakan kembali dengan lancar.
